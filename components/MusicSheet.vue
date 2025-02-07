@@ -1,7 +1,15 @@
 <script setup>
-import { Renderer, Stave, StaveNote, Voice, Formatter } from "vexflow";
+import {
+  Renderer,
+  Stave,
+  StaveNote,
+  Voice,
+  Formatter,
+  // TickContext,
+} from "vexflow";
 import { useNoteStyler } from "~/composables/useNoteStyler";
 import { useNoteColors } from "~/composables/useNoteColors";
+import { Howl } from "howler";
 
 const vexContainer = ref(null);
 const { applyNoteColors } = useNoteStyler();
@@ -36,28 +44,11 @@ const playNote = (note) => {
   sound.play();
 };
 
-const highlightNote = (index) => {
-  // Reset all notes to their original color
-  notes.value.forEach((note, i) => {
-    note.setStyle({
-      fillStyle: noteColors[note.keys[0].split("/")[0].toLowerCase()],
-      strokeStyle: noteColors[note.keys[0].split("/")[0].toLowerCase()],
-    });
-  });
+const context = ref(null);
+const stave = ref(null);
+const voice = ref(null);
 
-  // Highlight current note
-  if (index >= 0 && index < notes.value.length) {
-    notes.value[index].setStyle({
-      fillStyle: "black",
-      strokeStyle: "black",
-    });
-  }
-
-  // Redraw the score
-  context.value?.clear();
-  stave.value?.setContext(context.value).draw();
-  voice.value?.draw(context.value, stave.value);
-};
+const { highlightNote } = useNoteHighlighter(notes, stave, context);
 
 const startPlayback = () => {
   if (isPlaying.value) return;
@@ -85,10 +76,6 @@ const stopPlayback = () => {
   clearInterval(playbackInterval);
   highlightNote(-1);
 };
-
-const context = ref(null);
-const stave = ref(null);
-const voice = ref(null);
 
 onMounted(() => {
   isLoading.value = true;
@@ -118,7 +105,7 @@ onUnmounted(() => {
   <div class="music-sheet">
     <LoadingWave v-if="isLoading" />
     <div ref="vexContainer"></div>
-    <div class="controls">
+    <div v-if="!isLoading" class="controls">
       <label>
         Tempo:
         <input
