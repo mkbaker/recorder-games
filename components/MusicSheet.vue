@@ -1,9 +1,9 @@
 <script setup>
 import { Renderer, Stave, StaveNote, Voice, Formatter } from "vexflow";
-import { useNoteColors } from "~/composables/useNoteColors";
+import { useNoteStyler } from "~/composables/useNoteStyler";
 
 const vexContainer = ref(null);
-const { noteColors } = useNoteColors();
+const { applyNoteColors } = useNoteStyler();
 
 onMounted(() => {
   const renderer = new Renderer(vexContainer.value, Renderer.Backends.SVG);
@@ -19,10 +19,7 @@ onMounted(() => {
     new StaveNote({ keys: ["f/4"], duration: "q" }),
   ];
 
-  notes[0].setStyle({ fillStyle: noteColors.c, strokeStyle: noteColors.c });
-  notes[1].setStyle({ fillStyle: noteColors.d, strokeStyle: noteColors.d });
-  notes[2].setStyle({ fillStyle: noteColors.e, strokeStyle: noteColors.e });
-  notes[3].setStyle({ fillStyle: noteColors.f, strokeStyle: noteColors.f });
+  applyNoteColors(notes);
 
   const voice = new Voice({ num_beats: 4, beat_value: 4 });
   voice.addTickables(notes);
