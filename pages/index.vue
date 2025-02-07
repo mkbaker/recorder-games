@@ -2,7 +2,7 @@
   <div class="container">
     <h1>Recorder Games</h1>
     <MusicSheet />
-    <AudioPlayer />
+    <!-- <AudioPlayer /> -->
     <!-- <MicAnalyzer /> -->
   </div>
 </template>

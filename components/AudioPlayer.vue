@@ -11,9 +11,9 @@ const playNote = (note) => {
 </script>
 
 <template>
-  <div>
+  <!-- <div>
     <button @click="playNote('c4')">Play C</button>
     <button @click="playNote('d4')">Play D</button>
     <button @click="playNote('e4')">Play E</button>
-  </div>
+  </div> -->
 </template>
