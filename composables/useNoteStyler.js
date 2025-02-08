@@ -6,7 +6,15 @@ export function useNoteStyler() {
   const applyNoteColors = (notes) => {
     notes.forEach((note) => {
       const noteName = note.keys[0].split("/")[0].toLowerCase();
-      if (noteColors[noteName]) {
+      // outline for light colors
+      if (noteName === "e") {
+        note.setStyle({
+          fillStyle: noteColors[noteName],
+          strokeStyle: noteColors[noteName],
+          shadowColor: "black",
+          shadowBlur: 1,
+        });
+      } else if (noteColors[noteName]) {
         note.setStyle({
           fillStyle: noteColors[noteName],
           strokeStyle: noteColors[noteName],

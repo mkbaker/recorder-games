@@ -8,12 +8,10 @@ import {
   // TickContext,
 } from "vexflow";
 import { useNoteStyler } from "~/composables/useNoteStyler";
-import { useNoteColors } from "~/composables/useNoteColors";
 import { Howl } from "howler";
 
 const vexContainer = ref(null);
 const { applyNoteColors } = useNoteStyler();
-const { noteColors } = useNoteColors();
 const isLoading = ref(true);
 
 const tempo = ref(120);
@@ -77,12 +75,55 @@ const stopPlayback = () => {
   highlightNote(-1);
 };
 
+const handleResize = () => {
+  // if (!vexContainer.value || !context.value || !stave.value || !voice.value)
+  //   return;
+  // // Clear existing content
+  // context.value.clear();
+  // // Get new container dimensions
+  // const containerWidth = vexContainer.value.clientWidth;
+  // const containerHeight = 500;
+  // // Add padding
+  // const padding = 40;
+  // const width = containerWidth - padding * 2;
+  // const height = containerHeight - padding * 2;
+  // // Resize renderer
+  // const renderer = new Renderer(vexContainer.value, Renderer.Backends.SVG);
+  // renderer.resize(width, height);
+  // context.value = renderer.getContext();
+  // // Recalculate stave width and redraw
+  // const staveWidth = width - 60;
+  // stave.value = new Stave(padding, padding, staveWidth);
+  // stave.value.addClef("treble").setContext(context.value).draw();
+  // stave.value.addTimeSignature("4/4").setContext(context.value).draw();
+  // // Reformat and redraw notes
+  // new Formatter().joinVoices([voice.value]).format([voice.value], width);
+  // voice.value.draw(context.value, stave.value);
+};
+
+onBeforeMount(() => {
+  window.addEventListener("resize", handleResize);
+});
+
 onMounted(() => {
   isLoading.value = true;
+
+  // Get container dimensions
+  const containerWidth = vexContainer.value.clientWidth;
+  const containerHeight = 500;
+
+  // Add padding
+  const padding = 40;
+  const width = containerWidth - padding * 2;
+  const height = containerHeight - padding * 2;
+
   const renderer = new Renderer(vexContainer.value, Renderer.Backends.SVG);
-  renderer.resize(400, 200);
+  renderer.resize(width, height);
   context.value = renderer.getContext();
-  stave.value = new Stave(10, 40, 350);
+
+  // Calculate stave width leaving room for clef and time signature
+  const staveWidth = width - 60;
+  stave.value = new Stave(padding, padding, staveWidth);
   stave.value.addClef("treble").setContext(context.value).draw();
   stave.value.addTimeSignature("4/4").setContext(context.value).draw();
 
@@ -91,7 +132,7 @@ onMounted(() => {
   voice.value = new Voice({ num_beats: 4, beat_value: 4 });
   voice.value.addTickables(notes.value);
 
-  new Formatter().joinVoices([voice.value]).format([voice.value], 300);
+  new Formatter().joinVoices([voice.value]).format([voice.value], width);
   voice.value.draw(context.value, stave.value);
   isLoading.value = false;
 });
