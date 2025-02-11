@@ -1,8 +1,10 @@
-export const useTempo = () => {
-  const tempo = ref(120);
-  const beatDuration = computed(() => {
-    return 60000 / tempo.value;
-  });
+const state = reactive({
+  tempo: 120,
+});
 
+export const useTempo = () => {
+  const { tempo } = toRefs(state);
+
+  const beatDuration = computed(() => 60000 / tempo.value);
   return { tempo, beatDuration };
 };

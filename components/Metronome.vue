@@ -95,7 +95,7 @@ button {
   width: 100%;
   height: 100%;
   background: linear-gradient(
-    to right top,
+    to left top,
     transparent 45%,
     currentColor 45%,
     currentColor 55%,

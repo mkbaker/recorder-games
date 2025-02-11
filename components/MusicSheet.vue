@@ -10,14 +10,14 @@ import {
 } from "vexflow";
 import { useNoteStyler } from "~/composables/useNoteStyler";
 import { Howl } from "howler";
+import { Play, Pause } from "lucide-vue-next";
 
 const vexContainer = ref(null);
 const { applyNoteColors } = useNoteStyler();
 const isLoading = ref(true);
 
-const { beatDuration } = useTempo();
-const isPlaying = ref(false);
-const currentNoteIndex = ref(-1);
+const { beatDuration, tempo } = useTempo();
+
 let playbackInterval;
 
 const { melody, generateMelody } = useRandomMelody();
@@ -27,6 +27,18 @@ const notes = computed(() => {
     return new StaveNote({ keys: [note], duration: "q" });
   });
 });
+
+const context = ref(null);
+const stave = ref(null);
+const voice = ref(null);
+
+const { highlightNote } = useNoteHighlighter(notes, stave, context);
+
+///////////////////////
+/// playback module ///
+///////////////////////
+const isPlaying = ref(false);
+
 let currentSound = null;
 
 const playNote = (note) => {
@@ -43,18 +55,37 @@ const playNote = (note) => {
   sound.play();
 };
 
-const context = ref(null);
-const stave = ref(null);
-const voice = ref(null);
+const currentNoteIndex = ref(-1);
 
-const { highlightNote } = useNoteHighlighter(notes, stave, context);
+const playCountOff = () => {
+  return new Promise((resolve) => {
+    let countOffIndex = 0;
+    const interval = setInterval(() => {
+      console.log("count off index: ", countOffIndex);
+      const sound = new Howl({
+        src: ["/sounds/metronome_up.wav"],
+        volume: 1.0,
+      });
+      sound.play();
+      countOffIndex++;
+      if (countOffIndex >= 4) {
+        clearInterval(interval);
+        resolve();
+      }
+    }, beatDuration.value);
+  });
+};
 
-const startPlayback = () => {
+const startPlayback = async () => {
   if (isPlaying.value) return;
+  await playCountOff();
   isPlaying.value = true;
   currentNoteIndex.value = 0;
 
   playbackInterval = setInterval(() => {
+    // console.log("current note index: ", currentNoteIndex.value);
+    // console.log("current tempo: ", tempo.value);
+    // console.log("current beat duration: ", beatDuration.value);
     if (currentNoteIndex.value >= notes.value.length) {
       stopPlayback();
       return;
@@ -172,8 +203,8 @@ onUnmounted(() => {
     <div v-if="!isLoading" class="controls">
       <Metronome :is-playing="isPlaying" />
       <button @click="generateMelody">Generate Melody</button>
-      <button @click="startPlayback" :disabled="isPlaying">Play</button>
-      <button @click="stopPlayback" :disabled="!isPlaying">Stop</button>
+      <button @click="startPlayback" :disabled="isPlaying"><Play /></button>
+      <button @click="stopPlayback" :disabled="!isPlaying"><Pause /></button>
     </div>
   </div>
 </template>
