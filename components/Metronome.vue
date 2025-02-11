@@ -1,5 +1,6 @@
 <script setup>
 import { Howl } from "howler";
+import { Drum } from "lucide-vue-next";
 
 const props = defineProps({
   isPlaying: {
@@ -68,6 +69,37 @@ onUnmounted(() => {
     BPM
   </label>
   <button @click="playMetronomeOnly = !playMetronomeOnly">
-    Play Metronome
+    <Drum />
+    <div v-if="playMetronomeOnly" class="slash-overlay"></div>
   </button>
 </template>
+
+<style scoped>
+button {
+  position: relative;
+}
+
+.slash-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.slash-overlay::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to right top,
+    transparent 45%,
+    currentColor 45%,
+    currentColor 55%,
+    transparent 55%
+  );
+}
+</style>
