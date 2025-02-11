@@ -20,13 +20,13 @@ const isPlaying = ref(false);
 const currentNoteIndex = ref(-1);
 let playbackInterval;
 
-const notes = ref([
-  new StaveNote({ keys: ["c/4"], duration: "q" }),
-  new StaveNote({ keys: ["d/4"], duration: "q" }),
-  new StaveNote({ keys: ["e/4"], duration: "q" }),
-  new StaveNote({ keys: ["f/4"], duration: "q" }),
-]);
+const { melody, generateMelody } = useRandomMelody();
 
+const notes = computed(() => {
+  return melody.value.map((note) => {
+    return new StaveNote({ keys: [note], duration: "q" });
+  });
+});
 let currentSound = null;
 
 const playNote = (note) => {
@@ -97,6 +97,22 @@ const setupRenderer = (containerWidth, containerHeight = 500, padding = 40) => {
   return { width, height };
 };
 
+const renderMusic = () => {
+  const containerWidth = vexContainer.value.clientWidth;
+
+  const { width } = setupRenderer(containerWidth);
+  setupStave(width);
+  applyNoteColors(notes.value);
+  setupVoice(width);
+};
+
+const clearExistingMusic = () => {
+  while (vexContainer.value.firstChild) {
+    vexContainer.value.removeChild(vexContainer.value.firstChild);
+  }
+  context.value = null;
+};
+
 const handleResize = () => {
   if (!vexContainer.value || !context.value || !stave.value || !voice.value)
     return;
@@ -107,18 +123,8 @@ const handleResize = () => {
   }
 
   window.resizeTimeout = setTimeout(() => {
-    // Remove existing SVG element
-    while (vexContainer.value.firstChild) {
-      vexContainer.value.removeChild(vexContainer.value.firstChild);
-    }
-    context.value = null;
-
-    // Get container dimensions
-    const containerWidth = vexContainer.value.clientWidth;
-
-    const { width } = setupRenderer(containerWidth);
-    setupStave(width);
-    setupVoice(width);
+    clearExistingMusic();
+    renderMusic();
   }, 250); // Wait 250ms after resize stops before re-rendering
 };
 
@@ -129,13 +135,7 @@ onBeforeMount(() => {
 onMounted(() => {
   isLoading.value = true;
 
-  // Get container dimensions
-  const containerWidth = vexContainer.value.clientWidth;
-
-  const { width } = setupRenderer(containerWidth);
-  setupStave(width);
-  applyNoteColors(notes.value);
-  setupVoice(width);
+  renderMusic();
 
   // const note = new StaveNote({ keys: ["g/4", "bb/4", "d/5"], duration: "8" })
   //   .setStave(stave.value)
@@ -155,6 +155,11 @@ onMounted(() => {
   isLoading.value = false;
 });
 
+watch(melody, () => {
+  clearExistingMusic();
+  renderMusic();
+});
+
 onUnmounted(() => {
   stopPlayback();
 });
@@ -166,6 +171,7 @@ onUnmounted(() => {
     <div ref="vexContainer"></div>
     <div v-if="!isLoading" class="controls">
       <Metronome :is-playing="isPlaying" />
+      <button @click="generateMelody">Generate Melody</button>
       <button @click="startPlayback" :disabled="isPlaying">Play</button>
       <button @click="stopPlayback" :disabled="!isPlaying">Stop</button>
     </div>
