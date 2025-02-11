@@ -56,19 +56,23 @@ const playNote = (note) => {
 };
 
 const currentNoteIndex = ref(-1);
+const countOffIndex = ref(-1);
 
 const playCountOff = () => {
   return new Promise((resolve) => {
-    let countOffIndex = 0;
+    let currentSound;
+    const sound = new Howl({
+      src: ["/sounds/metronome_up.wav"],
+      volume: 1.0,
+    });
+    currentSound = sound;
+    sound.play();
+    countOffIndex.value = 0;
+
     const interval = setInterval(() => {
-      console.log("count off index: ", countOffIndex);
-      const sound = new Howl({
-        src: ["/sounds/metronome_up.wav"],
-        volume: 1.0,
-      });
       sound.play();
-      countOffIndex++;
-      if (countOffIndex >= 4) {
+      countOffIndex.value++;
+      if (countOffIndex.value > 3) {
         clearInterval(interval);
         resolve();
       }
@@ -79,13 +83,15 @@ const playCountOff = () => {
 const startPlayback = async () => {
   if (isPlaying.value) return;
   await playCountOff();
+  countOffIndex.value = -1;
   isPlaying.value = true;
   currentNoteIndex.value = 0;
+  const currentNote = notes.value[currentNoteIndex.value];
+  highlightNote(currentNoteIndex.value);
+  playNote(currentNote);
+  currentNoteIndex.value++;
 
   playbackInterval = setInterval(() => {
-    // console.log("current note index: ", currentNoteIndex.value);
-    // console.log("current tempo: ", tempo.value);
-    // console.log("current beat duration: ", beatDuration.value);
     if (currentNoteIndex.value >= notes.value.length) {
       stopPlayback();
       return;
@@ -165,24 +171,7 @@ onBeforeMount(() => {
 
 onMounted(() => {
   isLoading.value = true;
-
   renderMusic();
-
-  // const note = new StaveNote({ keys: ["g/4", "bb/4", "d/5"], duration: "8" })
-  //   .setStave(stave.value)
-  //   .addModifier(new Accidental("b"), 1);
-
-  // note.setStyle({
-  //   shadowBlur: 2,
-  //   shadowColor: "blue",
-  //   fillStyle: "blue",
-  //   strokeStyle: "blue",
-  // });
-
-  // new TickContext().addTickable(note).preFormat().setX(25);
-
-  // stave.value.setContext(context.value).draw();
-  // note.setContext(context.value).draw();
   isLoading.value = false;
 });
 
@@ -200,6 +189,7 @@ onUnmounted(() => {
   <div class="music-sheet">
     <LoadingWave v-if="isLoading" />
     <div ref="vexContainer"></div>
+    <div v-if="countOffIndex >= 0">{{ countOffIndex + 1 }}</div>
     <div v-if="!isLoading" class="controls">
       <Metronome :is-playing="isPlaying" />
       <button @click="generateMelody">Generate Melody</button>

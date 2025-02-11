@@ -1,5 +1,5 @@
 const state = reactive({
-  tempo: 120,
+  tempo: 80,
 });
 
 export const useTempo = () => {
