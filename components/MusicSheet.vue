@@ -15,7 +15,7 @@ const vexContainer = ref(null);
 const { applyNoteColors } = useNoteStyler();
 const isLoading = ref(true);
 
-const tempo = ref(120);
+const { beatDuration } = useTempo();
 const isPlaying = ref(false);
 const currentNoteIndex = ref(-1);
 let playbackInterval;
@@ -54,8 +54,6 @@ const startPlayback = () => {
   isPlaying.value = true;
   currentNoteIndex.value = 0;
 
-  const beatDuration = 60000 / tempo.value; // milliseconds per beat
-
   playbackInterval = setInterval(() => {
     if (currentNoteIndex.value >= notes.value.length) {
       stopPlayback();
@@ -66,7 +64,7 @@ const startPlayback = () => {
     highlightNote(currentNoteIndex.value);
     playNote(currentNote);
     currentNoteIndex.value++;
-  }, beatDuration);
+  }, beatDuration.value);
 };
 
 const stopPlayback = () => {
@@ -76,7 +74,7 @@ const stopPlayback = () => {
   highlightNote(-1);
 };
 
-const setupStave = (width, padding) => {
+const setupStave = (width, padding = 40) => {
   const staveWidth = width - 60;
   stave.value = new Stave(padding, padding, staveWidth);
   stave.value.addClef("treble").setContext(context.value).draw();
@@ -90,7 +88,7 @@ const setupVoice = (width) => {
   voice.value.draw(context.value, stave.value);
 };
 
-const setupRenderer = (containerWidth, containerHeight, padding) => {
+const setupRenderer = (containerWidth, containerHeight = 500, padding = 40) => {
   const width = containerWidth - padding;
   const height = containerHeight - padding;
   const renderer = new Renderer(vexContainer.value, Renderer.Backends.SVG);
@@ -117,11 +115,9 @@ const handleResize = () => {
 
     // Get container dimensions
     const containerWidth = vexContainer.value.clientWidth;
-    const containerHeight = 500;
-    const padding = 40;
 
-    const { width } = setupRenderer(containerWidth, containerHeight, padding);
-    setupStave(width, padding);
+    const { width } = setupRenderer(containerWidth);
+    setupStave(width);
     setupVoice(width);
   }, 250); // Wait 250ms after resize stops before re-rendering
 };
@@ -135,11 +131,9 @@ onMounted(() => {
 
   // Get container dimensions
   const containerWidth = vexContainer.value.clientWidth;
-  const containerHeight = 500;
-  const padding = 40;
 
-  const { width } = setupRenderer(containerWidth, containerHeight, padding);
-  setupStave(width, padding);
+  const { width } = setupRenderer(containerWidth);
+  setupStave(width);
   applyNoteColors(notes.value);
   setupVoice(width);
 
@@ -171,17 +165,7 @@ onUnmounted(() => {
     <LoadingWave v-if="isLoading" />
     <div ref="vexContainer"></div>
     <div v-if="!isLoading" class="controls">
-      <label>
-        Tempo:
-        <input
-          type="number"
-          v-model="tempo"
-          min="40"
-          max="208"
-          :disabled="isPlaying"
-        />
-        BPM
-      </label>
+      <Metronome :is-playing="isPlaying" />
       <button @click="startPlayback" :disabled="isPlaying">Play</button>
       <button @click="stopPlayback" :disabled="!isPlaying">Stop</button>
     </div>
