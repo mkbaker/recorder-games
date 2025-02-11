@@ -5,7 +5,8 @@ import {
   StaveNote,
   Voice,
   Formatter,
-  // TickContext,
+  TickContext,
+  Accidental,
 } from "vexflow";
 import { useNoteStyler } from "~/composables/useNoteStyler";
 import { Howl } from "howler";
@@ -75,30 +76,54 @@ const stopPlayback = () => {
   highlightNote(-1);
 };
 
+const setupStave = (width, padding) => {
+  const staveWidth = width - 60;
+  stave.value = new Stave(padding, padding, staveWidth);
+  stave.value.addClef("treble").setContext(context.value).draw();
+  stave.value.addTimeSignature("4/4").setContext(context.value).draw();
+};
+
+const setupVoice = (width) => {
+  voice.value = new Voice({ num_beats: 4, beat_value: 4 });
+  voice.value.addTickables(notes.value);
+  new Formatter().joinVoices([voice.value]).format([voice.value], width);
+  voice.value.draw(context.value, stave.value);
+};
+
+const setupRenderer = (containerWidth, containerHeight, padding) => {
+  const width = containerWidth - padding;
+  const height = containerHeight - padding;
+  const renderer = new Renderer(vexContainer.value, Renderer.Backends.SVG);
+  renderer.resize(width, height);
+  context.value = renderer.getContext();
+  return { width, height };
+};
+
 const handleResize = () => {
-  // if (!vexContainer.value || !context.value || !stave.value || !voice.value)
-  //   return;
-  // // Clear existing content
-  // context.value.clear();
-  // // Get new container dimensions
-  // const containerWidth = vexContainer.value.clientWidth;
-  // const containerHeight = 500;
-  // // Add padding
-  // const padding = 40;
-  // const width = containerWidth - padding * 2;
-  // const height = containerHeight - padding * 2;
-  // // Resize renderer
-  // const renderer = new Renderer(vexContainer.value, Renderer.Backends.SVG);
-  // renderer.resize(width, height);
-  // context.value = renderer.getContext();
-  // // Recalculate stave width and redraw
-  // const staveWidth = width - 60;
-  // stave.value = new Stave(padding, padding, staveWidth);
-  // stave.value.addClef("treble").setContext(context.value).draw();
-  // stave.value.addTimeSignature("4/4").setContext(context.value).draw();
-  // // Reformat and redraw notes
-  // new Formatter().joinVoices([voice.value]).format([voice.value], width);
-  // voice.value.draw(context.value, stave.value);
+  if (!vexContainer.value || !context.value || !stave.value || !voice.value)
+    return;
+
+  // Debounce the resize handler
+  if (window.resizeTimeout) {
+    clearTimeout(window.resizeTimeout);
+  }
+
+  window.resizeTimeout = setTimeout(() => {
+    // Remove existing SVG element
+    while (vexContainer.value.firstChild) {
+      vexContainer.value.removeChild(vexContainer.value.firstChild);
+    }
+    context.value = null;
+
+    // Get container dimensions
+    const containerWidth = vexContainer.value.clientWidth;
+    const containerHeight = 500;
+    const padding = 40;
+
+    const { width } = setupRenderer(containerWidth, containerHeight, padding);
+    setupStave(width, padding);
+    setupVoice(width);
+  }, 250); // Wait 250ms after resize stops before re-rendering
 };
 
 onBeforeMount(() => {
@@ -111,29 +136,28 @@ onMounted(() => {
   // Get container dimensions
   const containerWidth = vexContainer.value.clientWidth;
   const containerHeight = 500;
-
-  // Add padding
   const padding = 40;
-  const width = containerWidth - padding * 2;
-  const height = containerHeight - padding * 2;
 
-  const renderer = new Renderer(vexContainer.value, Renderer.Backends.SVG);
-  renderer.resize(width, height);
-  context.value = renderer.getContext();
-
-  // Calculate stave width leaving room for clef and time signature
-  const staveWidth = width - 60;
-  stave.value = new Stave(padding, padding, staveWidth);
-  stave.value.addClef("treble").setContext(context.value).draw();
-  stave.value.addTimeSignature("4/4").setContext(context.value).draw();
-
+  const { width } = setupRenderer(containerWidth, containerHeight, padding);
+  setupStave(width, padding);
   applyNoteColors(notes.value);
+  setupVoice(width);
 
-  voice.value = new Voice({ num_beats: 4, beat_value: 4 });
-  voice.value.addTickables(notes.value);
+  // const note = new StaveNote({ keys: ["g/4", "bb/4", "d/5"], duration: "8" })
+  //   .setStave(stave.value)
+  //   .addModifier(new Accidental("b"), 1);
 
-  new Formatter().joinVoices([voice.value]).format([voice.value], width);
-  voice.value.draw(context.value, stave.value);
+  // note.setStyle({
+  //   shadowBlur: 2,
+  //   shadowColor: "blue",
+  //   fillStyle: "blue",
+  //   strokeStyle: "blue",
+  // });
+
+  // new TickContext().addTickable(note).preFormat().setX(25);
+
+  // stave.value.setContext(context.value).draw();
+  // note.setContext(context.value).draw();
   isLoading.value = false;
 });
 
