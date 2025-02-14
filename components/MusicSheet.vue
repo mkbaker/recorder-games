@@ -8,7 +8,6 @@ import {
   TickContext,
   Accidental,
 } from "vexflow";
-import { useNoteStyler } from "~/composables/useNoteStyler";
 import { Howl } from "howler";
 import { Play, Pause } from "lucide-vue-next";
 
@@ -17,10 +16,10 @@ const { applyNoteColors } = useNoteStyler();
 const isLoading = ref(true);
 
 const { beatDuration, tempo } = useTempo();
-
+const timeSignature = [3, 4];
 let playbackInterval;
 
-const { melody, generateMelody } = useRandomMelody();
+const { melody, generateMelody } = useRandomMelody(timeSignature);
 
 const notes = computed(() => {
   return melody.value.map((note) => {
@@ -115,11 +114,17 @@ const setupStave = (width, padding = 40) => {
   const staveWidth = width - 60;
   stave.value = new Stave(padding, padding, staveWidth);
   stave.value.addClef("treble").setContext(context.value).draw();
-  stave.value.addTimeSignature("4/4").setContext(context.value).draw();
+  stave.value
+    .addTimeSignature(`${timeSignature[0]}/${timeSignature[1]}`)
+    .setContext(context.value)
+    .draw();
 };
 
 const setupVoice = (width) => {
-  voice.value = new Voice({ num_beats: 4, beat_value: 4 });
+  voice.value = new Voice({
+    num_beats: timeSignature[0],
+    beat_value: timeSignature[1],
+  });
   voice.value.addTickables(notes.value);
   new Formatter().joinVoices([voice.value]).format([voice.value], width);
   voice.value.draw(context.value, stave.value);
