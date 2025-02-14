@@ -59,19 +59,19 @@ const countOffIndex = ref(-1);
 
 const playCountOff = () => {
   return new Promise((resolve) => {
-    let currentSound;
+    // let currentSound;
     const sound = new Howl({
       src: ["/sounds/metronome_up.wav"],
       volume: 1.0,
     });
-    currentSound = sound;
+    // currentSound = sound;
     sound.play();
     countOffIndex.value = 0;
 
     const interval = setInterval(() => {
       sound.play();
       countOffIndex.value++;
-      if (countOffIndex.value > 3) {
+      if (countOffIndex.value > timeSignature[0] - 1) {
         clearInterval(interval);
         resolve();
       }
