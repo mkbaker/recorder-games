@@ -1,17 +1,17 @@
-export function useNoteHighlighter(notes, stave, context) {
-  const removeHighlights = () => {
+export function useBeatHighlighter(notes, stave, context) {
+  const removeBeatHighlight = () => {
     document.querySelectorAll(".beat-highlight").forEach((el) => {
       el.remove();
     });
   };
 
-  const highlightNote = (index) => {
+  const highlightBeat = (index) => {
     if (index < 0) {
-      removeHighlights();
+      removeBeatHighlight();
       return;
     }
 
-    removeHighlights();
+    removeBeatHighlight();
 
     const note = notes.value[index];
     const x = note.getAbsoluteX();
@@ -32,7 +32,7 @@ export function useNoteHighlighter(notes, stave, context) {
   };
 
   return {
-    removeHighlights,
-    highlightNote,
+    removeBeatHighlight,
+    highlightBeat,
   };
 }

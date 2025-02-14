@@ -32,7 +32,7 @@ const context = ref(null);
 const stave = ref(null);
 const voice = ref(null);
 
-const { highlightNote } = useNoteHighlighter(notes, stave, context);
+const { highlightBeat } = useBeatHighlighter(notes, stave, context);
 
 ///////////////////////
 /// playback module ///
@@ -87,7 +87,7 @@ const startPlayback = async () => {
   isPlaying.value = true;
   currentNoteIndex.value = 0;
   const currentNote = notes.value[currentNoteIndex.value];
-  highlightNote(currentNoteIndex.value);
+  highlightBeat(currentNoteIndex.value);
   playNote(currentNote);
   currentNoteIndex.value++;
 
@@ -98,7 +98,7 @@ const startPlayback = async () => {
     }
 
     const currentNote = notes.value[currentNoteIndex.value];
-    highlightNote(currentNoteIndex.value);
+    highlightBeat(currentNoteIndex.value);
     playNote(currentNote);
     currentNoteIndex.value++;
   }, beatDuration.value);
@@ -108,7 +108,7 @@ const stopPlayback = () => {
   isPlaying.value = false;
   currentNoteIndex.value = -1;
   clearInterval(playbackInterval);
-  highlightNote(-1);
+  highlightBeat(-1);
 };
 
 const setupStave = (width, padding = 40) => {
