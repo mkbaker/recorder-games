@@ -37,7 +37,14 @@ const { highlightBeat } = useBeatHighlighter(notes, stave, context);
 ///////////////////////
 /// playback module ///
 ///////////////////////
-const isPlaying = ref(false);
+// const isPlaying = ref(false);
+const {
+  isPlaying,
+  isMetronomeEnabled,
+  currentBeat,
+  startPlayback: controllerStartPlayback,
+  stopPlayback: controllerStopPlayback,
+} = usePlaybackController();
 
 let currentSound = null;
 
@@ -85,22 +92,17 @@ const startPlayback = async () => {
   await playCountOff();
   countOffIndex.value = -1;
   isPlaying.value = true;
-  currentNoteIndex.value = 0;
-  const currentNote = notes.value[currentNoteIndex.value];
-  highlightBeat(currentNoteIndex.value);
-  playNote(currentNote);
-  currentNoteIndex.value++;
+  controllerStartPlayback();
 
   playbackInterval = setInterval(() => {
-    if (currentNoteIndex.value >= notes.value.length) {
+    if (currentBeat.value >= notes.value.length) {
       stopPlayback();
       return;
     }
 
-    const currentNote = notes.value[currentNoteIndex.value];
-    highlightBeat(currentNoteIndex.value);
+    const currentNote = notes.value[currentBeat.value];
+    highlightBeat(currentBeat.value);
     playNote(currentNote);
-    currentNoteIndex.value++;
   }, beatDuration.value);
 };
 
@@ -109,6 +111,7 @@ const stopPlayback = () => {
   currentNoteIndex.value = -1;
   clearInterval(playbackInterval);
   highlightBeat(-1);
+  controllerStopPlayback();
 };
 
 const setupStave = (width, padding = 40) => {
@@ -218,6 +221,9 @@ watch([topValue, bottomValue], () => {
       <button @click="stopPlayback" :disabled="!isPlaying"><Pause /></button>
     </div>
   </div>
+  <pre>
+    currentBeat: {{ currentBeat }}
+  </pre>
 </template>
 
 <style lang="scss" scoped>

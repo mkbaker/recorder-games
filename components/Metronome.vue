@@ -9,12 +9,15 @@ const props = defineProps({
   },
 });
 
+const { isMetronomeEnabled, currentBeat, toggleMetronome } =
+  usePlaybackController();
+const { tempo } = useTempo();
+// const playMetronomeOnly = ref(false);
 let currentSound = null;
-const { tempo, beatDuration } = useTempo();
-const playMetronomeOnly = ref(false);
 let metronomeInterval;
 
 const playMetronome = () => {
+  console.log("playMetronome");
   if (currentSound) {
     currentSound.stop();
   }
@@ -27,33 +30,33 @@ const playMetronome = () => {
   sound.play();
 };
 
-const startMetronome = () => {
-  clearInterval(metronomeInterval); // Clear any existing interval
-  metronomeInterval = setInterval(playMetronome, beatDuration.value);
-  playMetronome(); // Play immediately when starting
-};
-
-const stopMetronome = () => {
-  clearInterval(metronomeInterval);
-  if (currentSound) {
-    currentSound.stop();
-  }
-};
-
-watchEffect(() => {
-  if (props.isPlaying || playMetronomeOnly.value) {
-    startMetronome();
-  } else {
-    stopMetronome();
+watch(currentBeat, (newBeat) => {
+  if (newBeat >= 0) {
+    playMetronome();
   }
 });
-// Clean up on component unmount
-onUnmounted(() => {
-  clearInterval(metronomeInterval);
-  if (currentSound) {
-    currentSound.stop();
-  }
-});
+
+// const stopMetronome = () => {
+//   clearInterval(metronomeInterval);
+//   if (currentSound) {
+//     currentSound.stop();
+//   }
+// };
+
+// watchEffect(() => {
+//   if (props.isPlaying || playMetronomeOnly.value) {
+//     startMetronome();
+//   } else {
+//     stopMetronome();
+//   }
+// });
+
+// onUnmounted(() => {
+//   clearInterval(metronomeInterval);
+//   if (currentSound) {
+//     currentSound.stop();
+//   }
+// });
 </script>
 
 <template>
@@ -68,9 +71,9 @@ onUnmounted(() => {
     />
     BPM
   </label>
-  <button @click="playMetronomeOnly = !playMetronomeOnly">
+  <button @click="toggleMetronome">
     <Drum />
-    <div v-if="playMetronomeOnly" class="slash-overlay"></div>
+    <div v-if="isMetronomeEnabled" class="slash-overlay"></div>
   </button>
 </template>
 
