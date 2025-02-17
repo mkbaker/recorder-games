@@ -16,7 +16,8 @@ const { applyNoteColors } = useNoteStyler();
 const isLoading = ref(true);
 
 const { beatDuration, tempo } = useTempo();
-const timeSignature = [3, 4];
+const { topValue, bottomValue, timeSignature } = useTimesignature();
+
 let playbackInterval;
 
 const { melody, generateMelody } = useRandomMelody(timeSignature);
@@ -71,7 +72,7 @@ const playCountOff = () => {
     const interval = setInterval(() => {
       sound.play();
       countOffIndex.value++;
-      if (countOffIndex.value > timeSignature[0] - 1) {
+      if (countOffIndex.value > timeSignature.value[0] - 1) {
         clearInterval(interval);
         resolve();
       }
@@ -115,15 +116,15 @@ const setupStave = (width, padding = 40) => {
   stave.value = new Stave(padding, padding, staveWidth);
   stave.value.addClef("treble").setContext(context.value).draw();
   stave.value
-    .addTimeSignature(`${timeSignature[0]}/${timeSignature[1]}`)
+    .addTimeSignature(`${topValue.value}/${bottomValue.value}`)
     .setContext(context.value)
     .draw();
 };
 
 const setupVoice = (width) => {
   voice.value = new Voice({
-    num_beats: timeSignature[0],
-    beat_value: timeSignature[1],
+    num_beats: timeSignature.value[0],
+    beat_value: timeSignature.value[1],
   });
   voice.value.addTickables(notes.value);
   new Formatter().joinVoices([voice.value]).format([voice.value], width);
@@ -188,6 +189,16 @@ watch(melody, () => {
 onUnmounted(() => {
   stopPlayback();
 });
+
+const updateTimeSignature = () => {
+  clearExistingMusic();
+  generateMelody();
+  renderMusic();
+};
+
+watch([topValue, bottomValue], () => {
+  updateTimeSignature();
+});
 </script>
 
 <template>
@@ -196,6 +207,11 @@ onUnmounted(() => {
     <div ref="vexContainer"></div>
     <div v-if="countOffIndex >= 0">{{ countOffIndex + 1 }}</div>
     <div v-if="!isLoading" class="controls">
+      <TimeSignatureControl
+        :is-playing="isPlaying"
+        v-model:top-value="topValue"
+        v-model:bottom-value="bottomValue"
+      />
       <Metronome :is-playing="isPlaying" />
       <button @click="generateMelody">Generate Melody</button>
       <button @click="startPlayback" :disabled="isPlaying"><Play /></button>
@@ -237,6 +253,23 @@ button {
 
   &:not(:disabled):hover {
     background-color: #f0f0f0;
+  }
+}
+
+.time-signature-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  input {
+    width: 50px;
+    padding: 4px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+
+  span {
+    font-weight: bold;
   }
 }
 </style>

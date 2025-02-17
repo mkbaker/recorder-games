@@ -1,10 +1,15 @@
-const useRandomMelody = (timeSignature = [4, 4], numberOfBars = 1) => {
+const useRandomMelody = (
+  timeSignature = ref([4, 4]),
+  numberOfBars = ref(1)
+) => {
   const notes = ref(["c", "d", "e", "f", "g", "a", "b"]);
   const range = ref([4]);
   const melody = ref([]);
-  const timeSignatureVal = toValue(timeSignature);
-  const numberOfBarsVal = toValue(numberOfBars);
-  const melodyLength = computed(() => timeSignatureVal[0] * numberOfBarsVal);
+  const timeSignatureVal = computed(() => toValue(timeSignature));
+  const numberOfBarsVal = computed(() => toValue(numberOfBars));
+  const melodyLength = computed(
+    () => timeSignatureVal.value[0] * numberOfBarsVal.value
+  );
 
   const generateMelody = () => {
     let result = [];
