@@ -8,20 +8,21 @@ const state = reactive({
 export function usePlaybackController() {
   const { isPlaying, isMetronomeEnabled, currentBeat, nextTickTime } =
     toRefs(state);
-  const { tempo, beatDuration } = useTempo();
+  const { beatDuration } = useTempo();
+  const { topValue } = useTimeSignature();
   let tickInterval = null;
 
   const startTick = () => {
     console.log("startTick");
     if (tickInterval) return;
 
-    // Calculate the next tick time
+    currentBeat.value = 0;
+
     nextTickTime.value = performance.now() + beatDuration.value;
-    console.log("nextTickTime", nextTickTime.value);
     tickInterval = setInterval(() => {
       const now = performance.now();
       if (now >= nextTickTime.value) {
-        currentBeat.value = (currentBeat.value + 1) % 4; // Assuming 4/4 time for now -- update to real time signature
+        currentBeat.value = (currentBeat.value + 1) % topValue.value;
         nextTickTime.value += beatDuration.value;
       }
     }, 10); // can this timing be smarter?
@@ -64,9 +65,10 @@ export function usePlaybackController() {
     isMetronomeEnabled,
     currentBeat,
     nextTickTime,
+    startTick,
+    stopTick,
     startPlayback,
     stopPlayback,
     toggleMetronome,
-    // subscribe,
   };
 }

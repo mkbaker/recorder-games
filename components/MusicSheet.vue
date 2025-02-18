@@ -12,11 +12,11 @@ import { Howl } from "howler";
 import { Play, Pause } from "lucide-vue-next";
 
 const vexContainer = ref(null);
-const { applyNoteColors } = useNoteStyler();
+// const { applyNoteColors } = useNoteStyler();
 const isLoading = ref(true);
 
 const { beatDuration, tempo } = useTempo();
-const { topValue, bottomValue, timeSignature } = useTimesignature();
+const { topValue, bottomValue, timeSignature } = useTimeSignature();
 
 let playbackInterval;
 
@@ -32,12 +32,21 @@ const context = ref(null);
 const stave = ref(null);
 const voice = ref(null);
 
+const { handleResize, renderMusic, clearExistingMusic } = useRenderMusic(
+  vexContainer,
+  stave,
+  voice,
+  context,
+  notes
+);
+
 const { highlightBeat } = useBeatHighlighter(notes, stave, context);
 
 ///////////////////////
 /// playback module ///
 ///////////////////////
-// const isPlaying = ref(false);
+const { playSynth } = useSynth();
+
 const {
   isPlaying,
   isMetronomeEnabled,
@@ -48,19 +57,19 @@ const {
 
 let currentSound = null;
 
-const playNote = (note) => {
-  if (currentSound) {
-    currentSound.stop();
-  }
-  // const noteName = note.keys[0].split("/")[0].toLowerCase();
-  const sound = new Howl({
-    // src: [`/sounds/${noteName}4.mp3`], // You'll add these sound files later
-    src: ["/sounds/c.wav"],
-    volume: 1.0,
-  });
-  currentSound = sound;
-  sound.play();
-};
+// const playNote = (note) => {
+// if (currentSound) {
+//   currentSound.stop();
+// }
+// // const noteName = note.keys[0].split("/")[0].toLowerCase();
+// const sound = new Howl({
+//   // src: [`/sounds/${noteName}4.mp3`], // You'll add these sound files later
+//   src: ["/sounds/c.wav"],
+//   volume: 1.0,
+// });
+// currentSound = sound;
+// sound.play();
+// };
 
 const currentNoteIndex = ref(-1);
 const countOffIndex = ref(-1);
@@ -89,20 +98,21 @@ const playCountOff = () => {
 
 const startPlayback = async () => {
   if (isPlaying.value) return;
+  isPlaying.value = true;
+
   await playCountOff();
   countOffIndex.value = -1;
-  isPlaying.value = true;
   controllerStartPlayback();
 
   playbackInterval = setInterval(() => {
-    if (currentBeat.value >= notes.value.length) {
+    if (currentBeat.value >= notes.value.length - 1) {
       stopPlayback();
       return;
     }
 
     const currentNote = notes.value[currentBeat.value];
     highlightBeat(currentBeat.value);
-    playNote(currentNote);
+    playSynth(currentNote.keys[0], currentNote.duration);
   }, beatDuration.value);
 };
 
@@ -114,66 +124,6 @@ const stopPlayback = () => {
   controllerStopPlayback();
 };
 
-const setupStave = (width, padding = 40) => {
-  const staveWidth = width - 60;
-  stave.value = new Stave(padding, padding, staveWidth);
-  stave.value.addClef("treble").setContext(context.value).draw();
-  stave.value
-    .addTimeSignature(`${topValue.value}/${bottomValue.value}`)
-    .setContext(context.value)
-    .draw();
-};
-
-const setupVoice = (width) => {
-  voice.value = new Voice({
-    num_beats: timeSignature.value[0],
-    beat_value: timeSignature.value[1],
-  });
-  voice.value.addTickables(notes.value);
-  new Formatter().joinVoices([voice.value]).format([voice.value], width);
-  voice.value.draw(context.value, stave.value);
-};
-
-const setupRenderer = (containerWidth, containerHeight = 500, padding = 40) => {
-  const width = containerWidth - padding;
-  const height = containerHeight - padding;
-  const renderer = new Renderer(vexContainer.value, Renderer.Backends.SVG);
-  renderer.resize(width, height);
-  context.value = renderer.getContext();
-  return { width, height };
-};
-
-const renderMusic = () => {
-  const containerWidth = vexContainer.value.clientWidth;
-
-  const { width } = setupRenderer(containerWidth);
-  setupStave(width);
-  applyNoteColors(notes.value);
-  setupVoice(width);
-};
-
-const clearExistingMusic = () => {
-  while (vexContainer.value.firstChild) {
-    vexContainer.value.removeChild(vexContainer.value.firstChild);
-  }
-  context.value = null;
-};
-
-const handleResize = () => {
-  if (!vexContainer.value || !context.value || !stave.value || !voice.value)
-    return;
-
-  // Debounce the resize handler
-  if (window.resizeTimeout) {
-    clearTimeout(window.resizeTimeout);
-  }
-
-  window.resizeTimeout = setTimeout(() => {
-    clearExistingMusic();
-    renderMusic();
-  }, 250); // Wait 250ms after resize stops before re-rendering
-};
-
 onBeforeMount(() => {
   window.addEventListener("resize", handleResize);
 });
@@ -182,6 +132,12 @@ onMounted(() => {
   isLoading.value = true;
   renderMusic();
   isLoading.value = false;
+  // test playsynth works when i press "u" key
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "u") {
+      playSynth();
+    }
+  });
 });
 
 watch(melody, () => {

@@ -1,5 +1,4 @@
 <script setup>
-import { Howl } from "howler";
 import { Drum } from "lucide-vue-next";
 
 const props = defineProps({
@@ -12,51 +11,6 @@ const props = defineProps({
 const { isMetronomeEnabled, currentBeat, toggleMetronome } =
   usePlaybackController();
 const { tempo } = useTempo();
-// const playMetronomeOnly = ref(false);
-let currentSound = null;
-let metronomeInterval;
-
-const playMetronome = () => {
-  console.log("playMetronome");
-  if (currentSound) {
-    currentSound.stop();
-  }
-
-  const sound = new Howl({
-    src: ["/sounds/metronome_up.wav"],
-    volume: 1.0,
-  });
-  currentSound = sound;
-  sound.play();
-};
-
-watch(currentBeat, (newBeat) => {
-  if (newBeat >= 0) {
-    playMetronome();
-  }
-});
-
-// const stopMetronome = () => {
-//   clearInterval(metronomeInterval);
-//   if (currentSound) {
-//     currentSound.stop();
-//   }
-// };
-
-// watchEffect(() => {
-//   if (props.isPlaying || playMetronomeOnly.value) {
-//     startMetronome();
-//   } else {
-//     stopMetronome();
-//   }
-// });
-
-// onUnmounted(() => {
-//   clearInterval(metronomeInterval);
-//   if (currentSound) {
-//     currentSound.stop();
-//   }
-// });
 </script>
 
 <template>

@@ -3,7 +3,7 @@ const state = reactive({
   bottomValue: 4,
 });
 
-export const useTimesignature = () => {
+export const useTimeSignature = () => {
   const { topValue, bottomValue } = toRefs(state);
 
   const timeSignature = computed(() => [
