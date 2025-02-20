@@ -1,18 +1,14 @@
 import {
   Renderer,
   Stave,
-  StaveNote,
+  //   StaveNote,
   Voice,
   Formatter,
-  TickContext,
-  Accidental,
+  //   TickContext,
+  //   Accidental,
 } from "vexflow";
 
 export const useRenderMusic = (vexContainer, stave, voice, context, notes) => {
-  //   const vexContainer = ref(null);
-  //   const stave = ref(null);
-  //   const voice = ref(null);
-  //   const context = ref(null);
   const { topValue, bottomValue, timeSignature } = useTimeSignature();
   const { applyNoteColors } = useNoteStyler();
 

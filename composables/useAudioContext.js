@@ -4,7 +4,7 @@ export const useAudioContext = () => {
   const isStarted = ref(false);
 
   const startAudioContext = async () => {
-    if (!isStarted.value) {
+    if (Tone.getContext().state !== "running") {
       await Tone.start();
       isStarted.value = true;
     }

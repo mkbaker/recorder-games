@@ -1,15 +1,8 @@
 <script setup>
-import {
-  Renderer,
-  Stave,
-  StaveNote,
-  Voice,
-  Formatter,
-  TickContext,
-  Accidental,
-} from "vexflow";
+import { StaveNote } from "vexflow";
 import { Howl } from "howler";
 import { Play, Pause } from "lucide-vue-next";
+import * as Tone from "tone";
 
 const vexContainer = ref(null);
 // const { applyNoteColors } = useNoteStyler();
@@ -17,6 +10,7 @@ const isLoading = ref(true);
 
 const { beatDuration, tempo } = useTempo();
 const { topValue, bottomValue, timeSignature } = useTimeSignature();
+const { startAudioContext } = useAudioContext();
 
 let playbackInterval;
 
@@ -49,72 +43,67 @@ const { playSynth } = useSynth();
 
 const {
   isPlaying,
-  isMetronomeEnabled,
+  // isMetronomeEnabled,
   currentBeat,
   startPlayback: controllerStartPlayback,
   stopPlayback: controllerStopPlayback,
 } = usePlaybackController();
 
-let currentSound = null;
-
-// const playNote = (note) => {
-// if (currentSound) {
-//   currentSound.stop();
-// }
-// // const noteName = note.keys[0].split("/")[0].toLowerCase();
-// const sound = new Howl({
-//   // src: [`/sounds/${noteName}4.mp3`], // You'll add these sound files later
-//   src: ["/sounds/c.wav"],
-//   volume: 1.0,
-// });
-// currentSound = sound;
-// sound.play();
-// };
-
 const currentNoteIndex = ref(-1);
 const countOffIndex = ref(-1);
+const { playMetronome } = useMetronome();
 
-const playCountOff = () => {
-  return new Promise((resolve) => {
-    // let currentSound;
-    const sound = new Howl({
-      src: ["/sounds/metronome_up.wav"],
-      volume: 1.0,
-    });
-    // currentSound = sound;
-    sound.play();
-    countOffIndex.value = 0;
+const playCountOff = async () => {
+  return new Promise(async (resolve) => {
+    let count = 0;
+    await Tone.start();
 
-    const interval = setInterval(() => {
-      sound.play();
-      countOffIndex.value++;
-      if (countOffIndex.value > timeSignature.value[0] - 1) {
-        clearInterval(interval);
-        resolve();
-      }
-    }, beatDuration.value);
+    const transport = Tone.getTransport();
+    transport.scheduleRepeat(
+      () => {
+        playMetronome();
+        count++;
+        countOffIndex.value = count;
+
+        if (count >= timeSignature.value[0]) {
+          transport.stop();
+          transport.cancel();
+          resolve();
+        }
+      },
+      beatDuration.value / 1000,
+      0
+    );
+    transport.start();
   });
 };
 
 const startPlayback = async () => {
   if (isPlaying.value) return;
-  isPlaying.value = true;
-
+  await startAudioContext();
   await playCountOff();
   countOffIndex.value = -1;
   controllerStartPlayback();
-
-  playbackInterval = setInterval(() => {
-    if (currentBeat.value >= notes.value.length - 1) {
-      stopPlayback();
-      return;
-    }
-
-    const currentNote = notes.value[currentBeat.value];
-    highlightBeat(currentBeat.value);
-    playSynth(currentNote.keys[0], currentNote.duration);
-  }, beatDuration.value);
 };
+// const startPlayback = async () => {
+//   if (isPlaying.value) return;
+//   isPlaying.value = true;
+
+//   await playCountOff();
+//   countOffIndex.value = -1;
+//   // controllerStartPlayback();
+
+//   playbackInterval = setInterval(() => {
+//     if (currentBeat.value >= notes.value.length - 1) {
+//       stopPlayback();
+//       return;
+//     }
+
+//     const currentNote = notes.value[currentBeat.value];
+//     highlightBeat(currentBeat.value);
+//     playSynth(currentNote.keys[0], currentNote.duration);
+//   }, beatDuration.value);
+// };
 
 const stopPlayback = () => {
   isPlaying.value = false;
@@ -133,11 +122,11 @@ onMounted(() => {
   renderMusic();
   isLoading.value = false;
   // test playsynth works when i press "u" key
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "u") {
-      playSynth();
-    }
-  });
+  // document.addEventListener("keydown", (e) => {
+  //   if (e.key === "u") {
+  //     playSynth();
+  //   }
+  // });
 });
 
 watch(melody, () => {
