@@ -83,7 +83,7 @@ const startPlayback = async () => {
   await startAudioContext();
   await playCountOff();
   countOffIndex.value = -1;
-  controllerStartPlayback();
+  controllerStartPlayback(notes.value);
 };
 // const startPlayback = async () => {
 //   if (isPlaying.value) return;

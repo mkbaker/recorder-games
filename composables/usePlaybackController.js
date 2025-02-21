@@ -13,8 +13,9 @@ let synth,
 export function usePlaybackController() {
   const { isPlaying, isMetronomeEnabled, currentBeat, metronome } =
     toRefs(state);
-  const { beatDuration } = useTempo();
+  const { beatDuration, tempo } = useTempo();
   const { topValue } = useTimeSignature();
+  const { playSynth } = useSynth();
   // const { startAudioContext } = useAudioContext();
 
   // 🎵 Initialize Synth
@@ -33,17 +34,18 @@ export function usePlaybackController() {
     // await initializeMetronome();
 
     await Tone.start(); // Ensure AudioContext is running
-    Tone.Transport.cancel(); // Clear previous events
-    Tone.Transport.bpm.value = 60 * (1000 / beatDuration.value); // Set BPM
+    const transport = Tone.getTransport();
+    transport.cancel(); // Clear previous events
+    transport.bpm.value = tempo.value;
     state.currentBeat = 0;
 
     // 🎵 Schedule Notes in Time
     notes.forEach((note, index) => {
       const time = index * (beatDuration.value / 1000);
       scheduledEvents.push(
-        Tone.Transport.schedule((time) => {
+        transport.schedule((time) => {
           state.currentBeat = index;
-          synth.triggerAttackRelease(note.keys[0], note.duration, time);
+          playSynth(note.keys[0], note.duration);
         }, time)
       );
     });
@@ -53,7 +55,7 @@ export function usePlaybackController() {
       for (let i = 0; i < topValue.value; i++) {
         const time = i * (beatDuration.value / 1000);
         scheduledEvents.push(
-          Tone.Transport.schedule((time) => {
+          transport.schedule((time) => {
             metronome.start(time);
           }, time)
         );
@@ -61,7 +63,7 @@ export function usePlaybackController() {
     }
 
     // 🚀 Start Tone.js Transport
-    Tone.Transport.start();
+    transport.start();
   };
 
   // 🛑 Stop Playback
