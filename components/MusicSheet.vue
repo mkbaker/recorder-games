@@ -1,6 +1,5 @@
 <script setup>
 import { StaveNote } from "vexflow";
-import { Howl } from "howler";
 import { Play, Pause } from "lucide-vue-next";
 import * as Tone from "tone";
 
