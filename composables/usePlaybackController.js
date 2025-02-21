@@ -7,60 +7,41 @@ const state = reactive({
   currentBeat: -1,
 });
 
-let synth,
-  scheduledEvents = [];
+let scheduledEvents = [];
 
-export function usePlaybackController() {
-  const { isPlaying, isMetronomeEnabled, currentBeat, metronome } =
-    toRefs(state);
+export function usePlaybackController(notes, stave, context) {
+  const { isPlaying, isMetronomeEnabled, currentBeat } = toRefs(state);
   const { beatDuration, tempo } = useTempo();
   const { topValue } = useTimeSignature();
   const { playSynth } = useSynth();
+  const { playMetronome } = useMetronome();
   // const { startAudioContext } = useAudioContext();
-
-  // 🎵 Initialize Synth
-  // const initializeSynth = async () => {
-  //   await startAudioContext(); // Ensure AudioContext is started
-  //   if (!synth) {
-  //     synth = new Tone.Synth().toDestination();
-  //   }
-  // };
+  const { highlightBeat } = useBeatHighlighter(notes, stave, context);
 
   const startPlayback = async (notes) => {
-    if (state.isPlaying) return;
-    state.isPlaying = true;
-
-    // await initializeSynth();
-    // await initializeMetronome();
+    if (isPlaying.value) return;
+    isPlaying.value = true;
 
     await Tone.start(); // Ensure AudioContext is running
     const transport = Tone.getTransport();
     transport.cancel(); // Clear previous events
     transport.bpm.value = tempo.value;
-    state.currentBeat = 0;
+    currentBeat.value = 0;
 
     // 🎵 Schedule Notes in Time
     notes.forEach((note, index) => {
       const time = index * (beatDuration.value / 1000);
       scheduledEvents.push(
         transport.schedule((time) => {
-          state.currentBeat = index;
+          currentBeat.value = index;
           playSynth(note.keys[0], note.duration);
+          highlightBeat(currentBeat.value);
+          if (isMetronomeEnabled.value) {
+            playMetronome();
+          }
         }, time)
       );
     });
-
-    // 🥁 Schedule Metronome if Enabled
-    if (state.isMetronomeEnabled) {
-      for (let i = 0; i < topValue.value; i++) {
-        const time = i * (beatDuration.value / 1000);
-        scheduledEvents.push(
-          transport.schedule((time) => {
-            metronome.start(time);
-          }, time)
-        );
-      }
-    }
 
     // 🚀 Start Tone.js Transport
     transport.start();
@@ -68,16 +49,18 @@ export function usePlaybackController() {
 
   // 🛑 Stop Playback
   const stopPlayback = () => {
-    state.isPlaying = false;
-    state.currentBeat = -1;
-    Tone.Transport.stop();
-    Tone.Transport.cancel(); // Clear scheduled events
+    isPlaying.value = false;
+    currentBeat.value = -1;
+    highlightBeat(-1);
+    const transport = Tone.getTransport();
+    transport.stop();
+    transport.cancel();
     scheduledEvents = [];
   };
 
   // 🎚️ Toggle Metronome
   const toggleMetronome = () => {
-    state.isMetronomeEnabled = !state.isMetronomeEnabled;
+    isMetronomeEnabled.value = !isMetronomeEnabled.value;
   };
 
   onUnmounted(() => {

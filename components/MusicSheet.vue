@@ -39,15 +39,13 @@ const { highlightBeat } = useBeatHighlighter(notes, stave, context);
 ///////////////////////
 /// playback module ///
 ///////////////////////
-const { playSynth } = useSynth();
-
 const {
   isPlaying,
   // isMetronomeEnabled,
   currentBeat,
   startPlayback: controllerStartPlayback,
   stopPlayback: controllerStopPlayback,
-} = usePlaybackController();
+} = usePlaybackController(notes, stave, context);
 
 const currentNoteIndex = ref(-1);
 const countOffIndex = ref(-1);
@@ -109,7 +107,6 @@ const stopPlayback = () => {
   isPlaying.value = false;
   currentNoteIndex.value = -1;
   clearInterval(playbackInterval);
-  highlightBeat(-1);
   controllerStopPlayback();
 };
 

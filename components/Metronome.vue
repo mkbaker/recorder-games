@@ -8,8 +8,7 @@ const props = defineProps({
   },
 });
 
-const { isMetronomeEnabled, currentBeat, toggleMetronome } =
-  usePlaybackController();
+const { isMetronomeEnabled, toggleMetronome } = usePlaybackController();
 const { tempo } = useTempo();
 </script>
 
