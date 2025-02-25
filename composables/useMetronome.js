@@ -1,8 +1,13 @@
 import * as Tone from "tone";
 import { useAudioContext } from "./useAudioContext";
 
+const state = reactive({
+  metronomeOn: true,
+});
+
 export const useMetronome = () => {
   const { startAudioContext } = useAudioContext();
+  const { metronomeOn } = toRefs(state);
   let metronome = null;
   let isLoaded = false;
 
@@ -40,8 +45,14 @@ export const useMetronome = () => {
     metronome.start();
   };
 
+  const toggleMetronome = () => {
+    metronomeOn.value = !metronomeOn.value;
+  };
+
   return {
     playMetronome,
     initializeMetronome,
+    toggleMetronome,
+    metronomeOn,
   };
 };

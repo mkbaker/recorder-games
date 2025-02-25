@@ -8,7 +8,7 @@ const props = defineProps({
   },
 });
 
-const { isMetronomeEnabled, toggleMetronome } = usePlaybackController();
+const { metronomeOn, toggleMetronome } = useMetronome();
 const { tempo } = useTempo();
 </script>
 
@@ -26,7 +26,7 @@ const { tempo } = useTempo();
   </label>
   <button @click="toggleMetronome">
     <Drum />
-    <div v-if="isMetronomeEnabled" class="slash-overlay"></div>
+    <div v-if="!metronomeOn" class="slash-overlay"></div>
   </button>
 </template>
 

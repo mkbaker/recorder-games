@@ -33,14 +33,11 @@ const { handleResize, renderMusic, clearExistingMusic } = useRenderMusic(
   notes
 );
 
-// const { highlightBeat } = useBeatHighlighter(notes, stave, context);
-
 ///////////////////////
 /// playback module ///
 ///////////////////////
 const {
   isPlaying,
-  // isMetronomeEnabled,
   currentBeat,
   startPlayback: controllerStartPlayback,
   stopPlayback: controllerStopPlayback,
@@ -48,7 +45,7 @@ const {
 
 const currentNoteIndex = ref(-1);
 const countOffIndex = ref(-1);
-const { playMetronome } = useMetronome();
+const { playMetronome, metronomeOn } = useMetronome();
 
 const playCountOff = async () => {
   return new Promise(async (resolve) => {
