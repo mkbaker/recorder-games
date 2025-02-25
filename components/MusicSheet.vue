@@ -4,7 +4,6 @@ import { Play, Pause } from "lucide-vue-next";
 import * as Tone from "tone";
 
 const vexContainer = ref(null);
-// const { applyNoteColors } = useNoteStyler();
 const isLoading = ref(true);
 
 const { beatDuration, tempo } = useTempo();
@@ -45,28 +44,34 @@ const {
 
 const currentNoteIndex = ref(-1);
 const countOffIndex = ref(-1);
-const { playMetronome, metronomeOn } = useMetronome();
+const { playMetronome } = useMetronome();
 
 const playCountOff = async () => {
+  let scheduledEvents = [];
   return new Promise(async (resolve) => {
-    let count = 0;
+    countOffIndex.value = 0;
     await Tone.start();
 
     const transport = Tone.getTransport();
-    transport.scheduleRepeat(
-      () => {
-        playMetronome();
-        count++;
-        countOffIndex.value = count;
 
-        if (count >= timeSignature.value[0]) {
-          transport.stop();
-          transport.cancel();
-          resolve();
-        }
-      },
-      beatDuration.value / 1000,
-      0
+    for (let i = 0; i < timeSignature.value[0]; i++) {
+      const time = i * (beatDuration.value / 1000);
+      scheduledEvents.push(
+        transport.schedule(() => {
+          playMetronome();
+          countOffIndex.value += 1;
+        }, time)
+      );
+    }
+
+    const finalBeatTime = totalBeats.value * (beatDuration.value / 1000);
+    scheduledEvents.push(
+      transport.schedule(() => {
+        transport.stop();
+        transport.cancel();
+        countOffIndex.value = -1;
+        resolve();
+      }, finalBeatTime)
     );
     transport.start();
   });
@@ -79,25 +84,6 @@ const startPlayback = async () => {
   countOffIndex.value = -1;
   controllerStartPlayback(notes.value, totalBeats.value);
 };
-// const startPlayback = async () => {
-//   if (isPlaying.value) return;
-//   isPlaying.value = true;
-
-//   await playCountOff();
-//   countOffIndex.value = -1;
-//   // controllerStartPlayback();
-
-//   playbackInterval = setInterval(() => {
-//     if (currentBeat.value >= notes.value.length - 1) {
-//       stopPlayback();
-//       return;
-//     }
-
-//     const currentNote = notes.value[currentBeat.value];
-//     highlightBeat(currentBeat.value);
-//     playSynth(currentNote.keys[0], currentNote.duration);
-//   }, beatDuration.value);
-// };
 
 const stopPlayback = () => {
   isPlaying.value = false;
@@ -105,13 +91,6 @@ const stopPlayback = () => {
   clearInterval(playbackInterval);
   controllerStopPlayback();
 };
-
-// watchEffect(() => {
-//   console.log(currentBeat.value, totalBeats.value);
-//   if (currentBeat.value > totalBeats.value - 1) {
-//     stopPlayback();
-//   }
-// });
 
 onBeforeMount(() => {
   window.addEventListener("resize", handleResize);
@@ -121,12 +100,6 @@ onMounted(() => {
   isLoading.value = true;
   renderMusic();
   isLoading.value = false;
-  // test playsynth works when i press "u" key
-  // document.addEventListener("keydown", (e) => {
-  //   if (e.key === "u") {
-  //     playSynth();
-  //   }
-  // });
 });
 
 watch(melody, () => {
