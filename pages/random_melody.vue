@@ -1,6 +1,9 @@
+<script setup></script>
+
 <template>
   <div class="container">
-    <NuxtLink to="/random_melody">Random Melody</NuxtLink>
+    <h1>Random melody</h1>
+    <MusicSheet />
   </div>
 </template>
 

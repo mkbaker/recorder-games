@@ -12,13 +12,11 @@ let scheduledEvents = [];
 export function usePlaybackController(notes, stave, context) {
   const { isPlaying, isMetronomeEnabled, currentBeat } = toRefs(state);
   const { beatDuration, tempo } = useTempo();
-  const { topValue } = useTimeSignature();
   const { playSynth } = useSynth();
   const { playMetronome } = useMetronome();
-  // const { startAudioContext } = useAudioContext();
   const { highlightBeat } = useBeatHighlighter(notes, stave, context);
 
-  const startPlayback = async (notes) => {
+  const startPlayback = async (notes, totalBeats) => {
     if (isPlaying.value) return;
     isPlaying.value = true;
 
@@ -32,7 +30,7 @@ export function usePlaybackController(notes, stave, context) {
     notes.forEach((note, index) => {
       const time = index * (beatDuration.value / 1000);
       scheduledEvents.push(
-        transport.schedule((time) => {
+        transport.schedule(() => {
           currentBeat.value = index;
           playSynth(note.keys[0], note.duration);
           highlightBeat(currentBeat.value);
@@ -43,7 +41,14 @@ export function usePlaybackController(notes, stave, context) {
       );
     });
 
-    // 🚀 Start Tone.js Transport
+    // stop playback when finished
+    const finalBeatTime = totalBeats * (beatDuration.value / 1000);
+    scheduledEvents.push(
+      transport.schedule(() => {
+        stopPlayback();
+      }, finalBeatTime)
+    );
+
     transport.start();
   };
 

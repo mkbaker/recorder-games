@@ -24,7 +24,11 @@ const useRandomMelody = (
 
   generateMelody();
 
-  return { melody, generateMelody };
+  const totalBeats = computed(
+    () => timeSignature.value[1] / numberOfBars.value
+  );
+
+  return { melody, totalBeats, generateMelody };
 };
 
 export default useRandomMelody;

@@ -13,7 +13,7 @@ const { startAudioContext } = useAudioContext();
 
 let playbackInterval;
 
-const { melody, generateMelody } = useRandomMelody(timeSignature);
+const { melody, generateMelody, totalBeats } = useRandomMelody(timeSignature);
 
 const notes = computed(() => {
   return melody.value.map((note) => {
@@ -33,7 +33,7 @@ const { handleResize, renderMusic, clearExistingMusic } = useRenderMusic(
   notes
 );
 
-const { highlightBeat } = useBeatHighlighter(notes, stave, context);
+// const { highlightBeat } = useBeatHighlighter(notes, stave, context);
 
 ///////////////////////
 /// playback module ///
@@ -80,7 +80,7 @@ const startPlayback = async () => {
   await startAudioContext();
   await playCountOff();
   countOffIndex.value = -1;
-  controllerStartPlayback(notes.value);
+  controllerStartPlayback(notes.value, totalBeats.value);
 };
 // const startPlayback = async () => {
 //   if (isPlaying.value) return;
@@ -108,6 +108,13 @@ const stopPlayback = () => {
   clearInterval(playbackInterval);
   controllerStopPlayback();
 };
+
+// watchEffect(() => {
+//   console.log(currentBeat.value, totalBeats.value);
+//   if (currentBeat.value > totalBeats.value - 1) {
+//     stopPlayback();
+//   }
+// });
 
 onBeforeMount(() => {
   window.addEventListener("resize", handleResize);
