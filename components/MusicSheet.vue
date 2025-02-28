@@ -44,44 +44,8 @@ const {
 
 const currentNoteIndex = ref(-1);
 const countOffIndex = ref(-1);
-const { playMetronome } = useMetronome();
-
-const playCountOff = async () => {
-  let scheduledEvents = [];
-  return new Promise(async (resolve) => {
-    countOffIndex.value = 0;
-    await Tone.start();
-
-    const transport = Tone.getTransport();
-
-    for (let i = 0; i < timeSignature.value[0]; i++) {
-      const time = i * (beatDuration.value / 1000);
-      scheduledEvents.push(
-        transport.schedule(() => {
-          playMetronome();
-          countOffIndex.value += 1;
-        }, time)
-      );
-    }
-
-    const finalBeatTime = totalBeats.value * (beatDuration.value / 1000);
-    scheduledEvents.push(
-      transport.schedule(() => {
-        transport.stop();
-        transport.cancel();
-        countOffIndex.value = -1;
-        resolve();
-      }, finalBeatTime)
-    );
-    transport.start();
-  });
-};
 
 const startPlayback = async () => {
-  if (isPlaying.value) return;
-  await startAudioContext();
-  await playCountOff();
-  countOffIndex.value = -1;
   controllerStartPlayback(notes.value, totalBeats.value);
 };
 
@@ -126,7 +90,7 @@ watch([topValue, bottomValue], () => {
   <div class="music-sheet">
     <LoadingWave v-if="isLoading" />
     <div ref="vexContainer"></div>
-    <div v-if="countOffIndex >= 0">{{ countOffIndex + 1 }}</div>
+    <div v-if="countOffIndex >= 0">{{ countOffIndex }}</div>
     <div v-if="!isLoading" class="controls">
       <TimeSignatureControl
         :is-playing="isPlaying"

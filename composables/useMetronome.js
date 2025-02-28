@@ -26,7 +26,7 @@ export const useMetronome = () => {
     }
   };
 
-  const playMetronome = async () => {
+  const playMetronome = async (time) => {
     if (!metronome) {
       await initializeMetronome();
     }
@@ -41,8 +41,13 @@ export const useMetronome = () => {
         }, 50);
       });
     }
-
-    metronome.start();
+    console.log("metronome time is supposed to be: ", time);
+    console.log("Metronome triggered at:", Tone.now());
+    if (time !== undefined) {
+      metronome.start(time);
+    } else {
+      metronome.start();
+    }
   };
 
   const toggleMetronome = () => {
