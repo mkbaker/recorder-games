@@ -25,7 +25,7 @@ export const useRenderStaff = (vexContainer, stave, context) => {
   const setupStave = (width, padding = 40) => {
     const staveWidth = width - 60;
     stave.value = new Stave(padding, padding, staveWidth);
-    stave.value.addClef("treble").setContext(context.value).draw();
+    stave.value.addClef("treble");
     stave.value.setContext(context.value).draw();
   };
 

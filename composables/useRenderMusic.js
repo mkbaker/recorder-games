@@ -15,11 +15,10 @@ export const useRenderMusic = (vexContainer, stave, voice, context, notes) => {
   const setupStave = (width, padding = 40) => {
     const staveWidth = width - 60;
     stave.value = new Stave(padding, padding, staveWidth);
-    stave.value.addClef("treble").setContext(context.value).draw();
     stave.value
-      .addTimeSignature(`${topValue.value}/${bottomValue.value}`)
-      .setContext(context.value)
-      .draw();
+      .addClef("treble")
+      .addTimeSignature(`${topValue.value}/${bottomValue.value}`);
+    stave.value.setContext(context.value).draw();
   };
 
   const setupVoice = (width) => {
