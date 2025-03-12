@@ -8,6 +8,7 @@ const input = ref(null);
 
 const pitch = ref(null);
 const clarity = ref(null);
+const note = ref(null);
 const isRunning = ref(false);
 
 const resumeAudioContext = () => {
@@ -26,6 +27,7 @@ const updatePitch = (sampleRate) => {
   );
   pitch.value = Math.round(detectedPitch * 10) / 10 || 0;
   clarity.value = Math.round(detectedClarity * 100) || 0;
+  note.value = useHzToNote(pitch.value);
 
   requestAnimationFrame(() => updatePitch(sampleRate));
 };
@@ -55,7 +57,10 @@ onUnmounted(() => {
 <template>
   <div class="tuner">
     <button @click="resumeAudioContext">resume audio context</button>
-    <div>Pitch: {{ pitch }} Hz Clarity: {{ clarity }} %</div>
+    <div>
+      Pitch: {{ pitch }} Hz <br />Clarity: {{ clarity }} % <br />Note:
+      {{ note }}
+    </div>
   </div>
 </template>
 
