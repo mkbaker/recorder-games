@@ -72,7 +72,7 @@ onMounted(() => {
   renderStaff();
   generateMelody();
   tickContext.value = new TickContext();
-  tickContext.value.preFormat().setX(400); // intended to be just out of view - will likely need to increase
+  tickContext.value.preFormat().setX(1000); // intended to be just out of view - will likely need to increase
 });
 </script>
 
@@ -85,6 +85,10 @@ onMounted(() => {
     </div>
 
     <button id="add-note" @click="addNote">add note</button>
+  </div>
+
+  <div>
+    <pre>visible notes: {{ visibleNoteGroups }}</pre>
   </div>
 </template>
 
@@ -111,19 +115,19 @@ onMounted(() => {
   margin: 5px;
 }
 
-.scroll {
+:deep(.scroll) {
   transition: transform 5s linear, opacity 0.5s ease-out, fill 0.2s linear;
 }
 
-.scrolling {
-  transform: translate(-400px, 0);
+:deep(.scrolling) {
+  transform: translate(-1000px, 0);
 }
 
-.correct {
+:deep(.correct) {
   opacity: 0;
 }
 
-.too-slow {
+:deep(.too-slow) {
   transform: translate(-400px, 2000px);
 }
 </style>
