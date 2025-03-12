@@ -8,6 +8,8 @@ let tickContext = ref(null);
 const { renderStaff } = useRenderStaff(output, stave, context);
 const { melody, generateMelody, totalBeats } = useRandomMelody();
 
+const score = ref(0);
+
 const durations = ["8", "4", "2", "1"];
 
 const availableNotes = ref([
@@ -65,6 +67,7 @@ const addNote = () => {
     if (index === -1) return;
     group.classList.add("too-slow");
     visibleNoteGroups.value.shift();
+    score.value--;
   }, 5000);
 };
 
@@ -89,6 +92,7 @@ onMounted(() => {
 
   <div>
     <pre>visible notes: {{ visibleNoteGroups }}</pre>
+    <pre>score: {{ score }}</pre>
   </div>
 </template>
 
