@@ -2,6 +2,8 @@
 import { PitchDetector } from "pitchy";
 import { StaveNote, Accidental, TickContext } from "vexflow";
 
+const sopranoRecorder = ref(true);
+
 const audioContext = ref(null);
 const analyserNode = ref(null);
 const detector = ref(null);
@@ -44,7 +46,8 @@ const updatePitch = (sampleRate) => {
 const renderNote = (note) => {
   console.log(note);
   if (note?.note === null) return;
-  const noteName = `${note.note}/${note.octave}`;
+  let octave = sopranoRecorder.value ? note.octave - 1 : note.octave;
+  const noteName = `${note.note}/${octave}`;
 
   const renderedNote = new StaveNote({
     keys: [noteName],
@@ -56,13 +59,22 @@ const renderNote = (note) => {
 };
 
 const clearExistingNote = () => {
-  console.log("clear existing note");
+  while (output.value.firstChild) {
+    output.value.removeChild(output.value.firstChild);
+  }
+  context.value = null;
+  renderStaff();
 };
 
-watch(pitch, () => {
-  if (pitch.value) {
+watch(note, (newVal, oldVal) => {
+  if (newVal === oldVal) {
+    return;
+  } else if (pitch.value > 0 && note.value?.note) {
+    if (newVal !== oldVal) {
+      clearExistingNote();
+    }
     renderNote(note.value);
-  } else {
+  } else if (note.value?.note) {
     clearExistingNote();
   }
 });
@@ -95,17 +107,29 @@ onUnmounted(() => {
 <template>
   <div class="tuner">
     <button @click="resumeAudioContext">resume audio context</button>
+    <div>
+      <input
+        v-model="sopranoRecorder"
+        type="checkbox"
+        name="soprano-recorder"
+        id="soprano-recorder"
+      />
+      <label for="soprano-recorder">soprano recorder</label>
+    </div>
+
     <div class="metadata">
       Pitch: {{ pitch }} Hz <br />Clarity: {{ clarity }} % <br />Note:
       {{ note }}
     </div>
 
-    <div class="detected-note">
-      {{ note?.note }}
-    </div>
+    <div class="display">
+      <div class="detected-note">
+        {{ note?.note }}
+      </div>
 
-    <div id="container">
-      <div ref="output" id="output"></div>
+      <div id="container">
+        <div ref="output" id="output"></div>
+      </div>
     </div>
   </div>
 </template>
@@ -125,5 +149,8 @@ onUnmounted(() => {
 
 #container {
   width: 300px;
+}
+
+.display {
 }
 </style>
