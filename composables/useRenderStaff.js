@@ -1,12 +1,4 @@
-import {
-  Renderer,
-  Stave,
-  //   StaveNote,
-  // Voice,
-  // Formatter,
-  //   TickContext,
-  //   Accidental,
-} from "vexflow";
+import { Renderer, Stave } from "vexflow";
 
 export const useRenderStaff = (vexContainer, stave, context) => {
   const setupRenderer = (
