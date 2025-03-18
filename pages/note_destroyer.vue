@@ -35,7 +35,7 @@ const availableNotes = ref([
 const notes = computed(() => {
   //   availableNotes.value.map(([letter, accidental, octave]) => {
   return melody.value.map((n) => {
-    console.log(n);
+    // console.log(n);
     const note = new StaveNote({
       //   clef: "treble",
       keys: [n],
@@ -54,6 +54,7 @@ const notes = computed(() => {
 });
 
 const visibleNoteGroups = ref([]);
+const visibleNotes = ref({});
 
 const addNote = () => {
   console.log("notes.value: ", notes.value);
@@ -65,6 +66,8 @@ const addNote = () => {
   }
   const group = context.value.openGroup();
   visibleNoteGroups.value.push(group);
+  let noteId = note.attrs.id;
+  visibleNotes.value[noteId] = note.keys[0];
   note.draw();
   context.value.closeGroup();
   group.classList.add("scroll");
@@ -77,9 +80,14 @@ const addNote = () => {
     if (index === -1) return;
     group.classList.add("too-slow");
     visibleNoteGroups.value.shift();
+    delete visibleNotes.value[noteId];
     score.value--;
   }, 5000);
 };
+
+watchEffect(() => {
+  console.log("visible note groups: ", visibleNoteGroups.value);
+});
 
 const resumeAudioContext = () => {
   if (audioContext.value) {
@@ -140,7 +148,7 @@ onMounted(() => {
   </div>
 
   <div>
-    <pre>visible notes: {{ visibleNoteGroups }}</pre>
+    <pre>visible notes: {{ visibleNotes }}</pre>
     <pre>score: {{ score }}</pre>
   </div>
   <div class="metadata">
