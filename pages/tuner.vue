@@ -151,6 +151,6 @@ onUnmounted(() => {
   width: 300px;
 }
 
-.display {
-}
+// .display {
+// }
 </style>
