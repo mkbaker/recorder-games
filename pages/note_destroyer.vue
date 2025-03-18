@@ -1,9 +1,19 @@
 <script setup>
+import { PitchDetector } from "pitchy";
 import { StaveNote, Accidental, TickContext } from "vexflow";
 const output = ref(null);
 const stave = ref(null);
 const context = ref(null);
-let tickContext = ref(null);
+const tickContext = ref(null);
+const audioContext = ref(null);
+const analyserNode = ref(null);
+const detector = ref(null);
+const input = ref(null);
+
+const pitch = ref(null);
+const clarity = ref(null);
+const note = ref(null);
+const isRunning = ref(null);
 
 const { renderStaff } = useRenderStaff(output, stave, context);
 const { melody, generateMelody, totalBeats } = useRandomMelody();
@@ -71,11 +81,49 @@ const addNote = () => {
   }, 5000);
 };
 
+const resumeAudioContext = () => {
+  if (audioContext.value) {
+    audioContext.value.resume();
+  }
+};
+
+const updatePitch = (sampleRate) => {
+  if (!isRunning.value) return;
+
+  analyserNode.value.getFloatTimeDomainData(input.value);
+  const [detectedPitch, detectedClarity] = detector.value.findPitch(
+    input.value,
+    sampleRate
+  );
+  pitch.value = Math.round(detectedPitch * 10) / 10 || 0;
+  clarity.value = Math.round(detectedClarity * 100) || 0;
+  note.value = useHzToNote(pitch.value);
+
+  requestAnimationFrame(() => {
+    updatePitch(sampleRate);
+  });
+};
+
 onMounted(() => {
   renderStaff();
   generateMelody();
   tickContext.value = new TickContext();
   tickContext.value.preFormat().setX(1000); // intended to be just out of view - will likely need to increase
+
+  // set up audio context
+  audioContext.value = new window.AudioContext();
+  analyserNode.value = audioContext.value.createAnalyser();
+  resumeAudioContext();
+  isRunning.value = true;
+  navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+    audioContext.value
+      .createMediaStreamSource(stream)
+      .connect(analyserNode.value);
+    detector.value = PitchDetector.forFloat32Array(analyserNode.value.fftSize);
+    detector.value.minVolumeDecibels = -10;
+    input.value = new Float32Array(detector.value.inputLength);
+    updatePitch(audioContext.value.sampleRate);
+  });
 });
 </script>
 
@@ -88,11 +136,16 @@ onMounted(() => {
     </div>
 
     <button id="add-note" @click="addNote">add note</button>
+    <button @click="resumeAudioContext">resume audio context</button>
   </div>
 
   <div>
     <pre>visible notes: {{ visibleNoteGroups }}</pre>
     <pre>score: {{ score }}</pre>
+  </div>
+  <div class="metadata">
+    Pitch: {{ pitch }} Hz <br />Clarity: {{ clarity }} % <br />Note:
+    {{ note }}
   </div>
 </template>
 
