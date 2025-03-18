@@ -44,8 +44,9 @@ const updatePitch = (sampleRate) => {
 };
 
 const renderNote = (note) => {
-  console.log(note);
-  if (note?.note === null) return;
+  console.log({ ...note, hz: pitch.value });
+  if (note?.note === null || note?.octave === null || note?.octave < 3) return;
+
   let octave = sopranoRecorder.value ? note.octave - 1 : note.octave;
   const noteName = `${note.note}/${octave}`;
 
@@ -123,12 +124,12 @@ onUnmounted(() => {
     </div>
 
     <div class="display">
-      <div class="detected-note">
-        {{ note?.note }}
-      </div>
-
       <div id="container">
         <div ref="output" id="output"></div>
+      </div>
+
+      <div class="detected-note">
+        {{ note?.note }}
       </div>
     </div>
   </div>

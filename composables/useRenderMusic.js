@@ -10,7 +10,7 @@ import {
 
 export const useRenderMusic = (vexContainer, stave, voice, context, notes) => {
   const { topValue, bottomValue, timeSignature } = useTimeSignature();
-  const { applyNoteColors } = useNoteStyler();
+  const { applyNoteColors, setStemDirection } = useNoteStyler();
 
   const setupStave = (width, padding = 40) => {
     const staveWidth = width - 60;
@@ -50,6 +50,7 @@ export const useRenderMusic = (vexContainer, stave, voice, context, notes) => {
     const { width } = setupRenderer(containerWidth);
     setupStave(width);
     applyNoteColors(notes.value);
+    setStemDirection(notes.value);
     setupVoice(width);
   };
 

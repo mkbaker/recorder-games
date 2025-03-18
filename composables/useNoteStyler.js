@@ -3,9 +3,12 @@ import { useNoteColors } from "./useNoteColors";
 export function useNoteStyler() {
   const { noteColors } = useNoteColors();
 
+  const getNoteName = (noteObj) => {
+    return noteObj.keys[0].split("/")[0].toLowerCase();
+  };
   const applyNoteColors = (notes) => {
     notes.forEach((note) => {
-      const noteName = note.keys[0].split("/")[0].toLowerCase();
+      const noteName = getNoteName(note);
       // outline for light colors
       if (noteName === "e") {
         note.setStyle({
@@ -24,7 +27,14 @@ export function useNoteStyler() {
     return notes;
   };
 
+  const setStemDirection = (notes) => {
+    notes.forEach((note) => {
+      // note.stem_direction = -1;
+    });
+  };
+
   return {
     applyNoteColors,
+    setStemDirection,
   };
 }

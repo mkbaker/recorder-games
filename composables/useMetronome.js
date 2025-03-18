@@ -41,8 +41,8 @@ export const useMetronome = () => {
         }, 50);
       });
     }
-    console.log("metronome time is supposed to be: ", time);
-    console.log("Metronome triggered at:", Tone.now());
+    // console.log("metronome time is supposed to be: ", time);
+    // console.log("Metronome triggered at:", Tone.now());
     if (time !== undefined) {
       metronome.start(time);
     } else {

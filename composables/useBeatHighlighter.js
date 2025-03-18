@@ -1,6 +1,8 @@
 export function useBeatHighlighter(notes, stave, context) {
   let highlightEl = null;
 
+  const fill = "rgba(255, 215, 0, 0.3)";
+  const stroke = "rgba(255, 215, 0, 0.8)";
   const removeBeatHighlight = () => {
     if (highlightEl) {
       highlightEl.remove();
@@ -25,8 +27,8 @@ export function useBeatHighlighter(notes, stave, context) {
         "rect"
       );
       highlightEl.setAttribute("class", "beat-highlight");
-      highlightEl.setAttribute("fill", "rgba(255, 215, 0, 0.3)");
-      highlightEl.setAttribute("stroke", "rgba(255, 215, 0, 0.8)");
+      highlightEl.setAttribute("fill", fill);
+      highlightEl.setAttribute("stroke", stroke);
       highlightEl.setAttribute("stroke-width", "4");
       highlightEl.setAttribute("rx", "10");
 
