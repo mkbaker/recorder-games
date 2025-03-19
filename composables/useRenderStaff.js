@@ -6,7 +6,12 @@ export const useRenderStaff = (vexContainer, stave, context) => {
     containerHeight = 500,
     padding = 40
   ) => {
-    const width = containerWidth - padding;
+    let width = containerWidth - padding;
+    if (width < 0) {
+      // sorry about this tech debt
+      width = 150;
+    }
+
     const height = containerHeight - padding;
     const renderer = new Renderer(vexContainer.value, Renderer.Backends.SVG);
     renderer.resize(width, height);

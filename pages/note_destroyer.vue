@@ -1,10 +1,19 @@
 <script setup>
 import { PitchDetector } from "pitchy";
 import { StaveNote, Accidental, TickContext } from "vexflow";
-const output = ref(null);
-const stave = ref(null);
-const context = ref(null);
-const tickContext = ref(null);
+
+// staff for game notes (output)
+const outputContainer = ref(null);
+const outputStave = ref(null);
+const outputContext = ref(null);
+const outputTickContext = ref(null);
+
+// staff for input notes played
+const inputContainer = ref(null);
+const inputStave = ref(null);
+const inputContext = ref(null);
+const inputTickContext = ref(null);
+
 const audioContext = ref(null);
 const analyserNode = ref(null);
 const detector = ref(null);
@@ -15,7 +24,17 @@ const clarity = ref(null);
 const note = ref(null);
 const isRunning = ref(null);
 
-const { renderStaff } = useRenderStaff(output, stave, context);
+const { renderStaff: renderOutputStaff } = useRenderStaff(
+  outputContainer,
+  outputStave,
+  outputContext
+);
+
+const { renderStaff: renderInputStaff } = useRenderStaff(
+  inputContainer,
+  inputStave,
+  inputContext
+);
 const { melody, generateMelody, totalBeats } = useRandomMelody();
 
 const score = ref(0);
@@ -42,13 +61,13 @@ const notes = computed(() => {
       //   duration: durations[Math.floor(Math.random() * durations.legnth)],
       duration: "q",
     });
-    note.setContext(context.value).setStave(stave.value);
+    note.setContext(outputContext.value).setStave(outputStave.value);
 
     // accidentals must be rendered manuially
     // if (accidental) {
     //   note.addModifier(new Accidental(accidental));
     // }
-    tickContext.value.addTickable(note);
+    outputTickContext.value.addTickable(note);
     return note;
   });
 });
@@ -64,12 +83,12 @@ const addNote = () => {
     console.log("no more notes!");
     return;
   }
-  const group = context.value.openGroup();
+  const group = outputContext.value.openGroup();
   visibleNoteGroups.value.push(group);
   let noteId = note.attrs.id;
   visibleNotes.value[noteId] = note.keys[0];
   note.draw();
-  context.value.closeGroup();
+  outputContext.value.closeGroup();
   group.classList.add("scroll");
 
   const box = group.getBoundingClientRect();
@@ -83,6 +102,25 @@ const addNote = () => {
     delete visibleNotes.value[noteId];
     score.value--;
   }, 5000);
+};
+
+const removeCorrectNote = (noteId) => {
+  console.log("removing: ", noteId);
+  if (!visibleNotes.value[noteId]) return;
+  console.log(visibleNoteGroups.value);
+  const index = Object.keys(visibleNotes.value).indexOf(noteId);
+
+  console.log("index: ", index);
+  if (index !== -1) {
+    const group = visibleNoteGroups.value[index];
+
+    // Add 'correct' class for visual feedback
+    group.classList.add("correct");
+
+    visibleNoteGroups.value.splice(index, 1); // Remove from groups
+    delete visibleNotes.value[noteId]; // Remove from visible notes
+    score.value++;
+  }
 };
 
 watchEffect(() => {
@@ -112,11 +150,76 @@ const updatePitch = (sampleRate) => {
   });
 };
 
+const sopranoRecorder = ref(true);
+const renderNote = (note) => {
+  console.log({ ...note, hz: pitch.value });
+  if (note?.note === null || note?.octave === null || note?.octave < 3) return;
+
+  let octave = sopranoRecorder.value ? note.octave - 1 : note.octave;
+  const noteName = `${note.note}/${octave}`;
+
+  const renderedNote = new StaveNote({
+    keys: [noteName],
+    duration: "q",
+  });
+  renderedNote.setContext(inputContext.value).setStave(inputStave.value);
+  inputTickContext.value.addTickable(renderedNote);
+  renderedNote.draw();
+};
+
+const clearExistingNote = () => {
+  while (inputContainer.value.firstChild) {
+    inputContainer.value.removeChild(inputContainer.value.firstChild);
+  }
+  inputContext.value = null;
+  renderInputStaff();
+};
+
+watch(note, (newVal, oldVal) => {
+  if (newVal === oldVal) {
+    return;
+  } else if (pitch.value > 0 && note.value?.note) {
+    if (newVal !== oldVal) {
+      clearExistingNote();
+    }
+    renderNote(note.value);
+  } else if (note.value?.note) {
+    clearExistingNote();
+  }
+});
+
+const formatNote = (noteObj) => {
+  if (!noteObj) return null;
+  let octave = sopranoRecorder.value ? noteObj?.octave - 1 : noteObj?.octave;
+  return `${noteObj?.note.toLowerCase()}/${octave}`;
+};
+
+watchEffect(() => {
+  if (note.value?.note === null || Object.keys(visibleNotes.value).length < 1)
+    return;
+  let formattedPlayedNote = formatNote(note.value);
+  if (!formattedPlayedNote) return;
+
+  let playedCorrectNote = Object.keys(visibleNotes.value).find((key) => {
+    // console.log(
+    //   `Comparing: ${visibleNotes.value[key]} vs ${formattedPlayedNote}`
+    // );
+    return visibleNotes.value[key] == formattedPlayedNote;
+  });
+  // console.log(playedCorrectNote);
+  if (playedCorrectNote) {
+    // console.log("played correct note!", playedCorrectNote);
+    removeCorrectNote(playedCorrectNote);
+  }
+});
+
 onMounted(() => {
-  renderStaff();
+  renderInputStaff();
+  renderOutputStaff();
   generateMelody();
-  tickContext.value = new TickContext();
-  tickContext.value.preFormat().setX(1000); // intended to be just out of view - will likely need to increase
+  outputTickContext.value = new TickContext();
+  outputTickContext.value.preFormat().setX(1000); // intended to be just out of view - will likely need to increase
+  inputTickContext.value = new TickContext();
 
   // set up audio context
   audioContext.value = new window.AudioContext();
@@ -140,7 +243,8 @@ onMounted(() => {
     <h1>Note Destroyer</h1>
 
     <div id="container">
-      <div ref="output" id="output"></div>
+      <div ref="inputContainer" id="input"></div>
+      <div ref="outputContainer" id="output"></div>
     </div>
 
     <button id="add-note" @click="addNote">add note</button>
@@ -164,9 +268,17 @@ onMounted(() => {
   overflow: hidden;
   border: 1px solid deeppink;
   margin: 10px;
+  display: flex;
+  flex-flow: row nowrap;
 }
 
-#container > div {
+#input {
+  width: 100px;
+  height: 120px;
+  white-space: nowrap;
+}
+
+#output {
   width: 10000px;
   height: 120px;
   white-space: nowrap;
@@ -194,5 +306,9 @@ onMounted(() => {
 
 :deep(.too-slow) {
   transform: translate(-400px, 2000px);
+}
+
+:deep(.correct) {
+  transform: translate(400px, 2000px);
 }
 </style>
