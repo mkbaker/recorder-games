@@ -116,6 +116,7 @@ const removeCorrectNote = (noteId) => {
 
     // Add 'correct' class for visual feedback
     group.classList.add("correct");
+    // group.classList.remove("scrolling");
 
     visibleNoteGroups.value.splice(index, 1); // Remove from groups
     delete visibleNotes.value[noteId]; // Remove from visible notes
@@ -123,9 +124,10 @@ const removeCorrectNote = (noteId) => {
   }
 };
 
-watchEffect(() => {
-  console.log("visible note groups: ", visibleNoteGroups.value);
-});
+const playCorrectNote = () => {
+  let noteId = Object.keys(visibleNotes.value)[0];
+  removeCorrectNote(noteId);
+};
 
 const resumeAudioContext = () => {
   if (audioContext.value) {
@@ -201,14 +203,14 @@ watchEffect(() => {
   if (!formattedPlayedNote) return;
 
   let playedCorrectNote = Object.keys(visibleNotes.value).find((key) => {
-    // console.log(
-    //   `Comparing: ${visibleNotes.value[key]} vs ${formattedPlayedNote}`
-    // );
+    console.log(
+      `Comparing: ${visibleNotes.value[key]} vs ${formattedPlayedNote}`
+    );
     return visibleNotes.value[key] == formattedPlayedNote;
   });
-  // console.log(playedCorrectNote);
+  console.log(playedCorrectNote);
   if (playedCorrectNote) {
-    // console.log("played correct note!", playedCorrectNote);
+    console.log("played correct note!", playedCorrectNote);
     removeCorrectNote(playedCorrectNote);
   }
 });
@@ -248,6 +250,9 @@ onMounted(() => {
     </div>
 
     <button id="add-note" @click="addNote">add note</button>
+    <button id="play-correct-note" @click="playCorrectNote">
+      play correct note
+    </button>
     <button @click="resumeAudioContext">resume audio context</button>
   </div>
 
@@ -300,15 +305,16 @@ onMounted(() => {
   transform: translate(-1000px, 0);
 }
 
-:deep(.correct) {
-  opacity: 0;
-}
+// :deep(.correct) {
+//   opacity: 0;
+// }
 
 :deep(.too-slow) {
   transform: translate(-400px, 2000px);
 }
 
 :deep(.correct) {
-  transform: translate(400px, 2000px);
+  background-color: green;
+  transform: translate(800px, 2000px);
 }
 </style>
